@@ -2,33 +2,34 @@ import WebSocket from "ws";
 import { insertNewFind } from "./features/mongo/index.js";
 
 export default class BlueskyScanner {
-    constructor() {
-      this.client = new WebSocket(
-        "wss://jetstream2.us-west.bsky.network/subscribe"
-      );
-      this.messageStack = [];
+    constructor(useMongo, source) {
+        this.useMongo = useMongo ?? false;
+        this.client = new WebSocket(
+            source ?? "wss://jetstream2.us-west.bsky.network/subscribe"
+        );
+        this.messageStack = [];
     }
   
     async run(filterFunction) {
-      this.client.onmessage = (event) => {
-        this.incomingMessageHandler(JSON.parse(event.data), filterFunction);
-      };
+        this.client.onmessage = (event) => {
+            this.incomingMessageHandler(JSON.parse(event.data), filterFunction);
+        };
     }
   
     async incomingMessageHandler(obj, filterFunction) {
-      const text = obj?.commit?.record?.text ?? false;
-      const intersection = text ? filterFunction(text) : false;
-      
-      if(intersection) {
-        await insertNewFind(obj.commit);
-        this.messageStack.push(text);
-        console.log(text);
-      }
+        const text = obj?.commit?.record?.text ?? false;
+        const intersection = text ? filterFunction(text) : false;
+        
+        if(intersection) {
+            await insertNewFind(obj.commit);
+            this.messageStack.push(text);
+            console.log(text);
+        }
     }
-  }
+}
   
   // Define your custom filter function
-  function customFilter(input) {
+function customFilter(input) {
     const phrases = [
         "new crypto project",
         "influencer crypto",
@@ -42,6 +43,6 @@ export default class BlueskyScanner {
   
   // Create instance and run with the custom filter
   const instance = new BlueskyScanner();
-  (async () => {
+(async () => {
     await instance.run(customFilter);
-  })();
+})();
