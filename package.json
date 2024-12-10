@@ -1,20 +1,27 @@
 {
-  "name": "jetstream-monitor",
+  "name": "jetstream-scanner",
   "version": "1.0.0",
-  "description": "Subscribes to jetstream feed of information ",
+  "description": "Subscribes to jetstream feed with filters",
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsc",
+    "test": "tsx ./test/index.spec.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^16.4.7",
+    "glob": "^11.0.0",
     "mongodb": "^6.11.0",
     "nodemon": "^3.1.7",
     "openai": "^4.76.0",
     "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.5.13",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
   }
 }
