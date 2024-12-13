@@ -10,7 +10,6 @@ const client = new MongoClient(process.env.MONGO_CLUSTER_URI as string, {
     }
 });
 
-
 export async function insertNewFind(msg: string) {
     try {
         const db = client.db(process.env.DATABASE as string);

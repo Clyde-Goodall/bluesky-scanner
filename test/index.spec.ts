@@ -17,28 +17,31 @@ const phrases = [
 
 test("Message content filtering function", async (t) => {
 // Define your custom filter function
-    function customFilter(input: string) {
+    function customFilter(input: string): boolean{
         // pay no heed to the example filters :^)
 
-        return phrases.some(str => 
+        const found = phrases.some(str => 
         input.toLowerCase().includes(str.toLowerCase())
         );
+        return found;
     }
-
-    function llmLogic(msg: string) {
+    
+    function llmLogic(msg: string) { //whether it's relevant + reformat
         const prompt = `(If this following message indicates a new coin listing, 
         return the following as pure json filled in with the respective values and no decorators like '\`\`\`json': 
-        {coin: name, exchange: platform, summary: summary of message}) 
+        {coin: name, exchange: platform, summary: summary of message}. Otherwise return null as raw value) 
 
         ${msg}`;
 
         return prompt;
     }
 
-    function mongoLogic(incoming: Object) {
+    function mongoLogic(incoming: Object) { // whether it should insert
+        if(incoming == undefined || !incoming) return false
         if(Object.hasOwn(incoming, "coin") && Object.hasOwn(incoming, "platform")) {
-            return true
+            return true;
         }
+        return false;
     }
     // Create instance and run with the custom filter
     const instance = new BlueskyScanner({
@@ -46,6 +49,9 @@ test("Message content filtering function", async (t) => {
         mongoLogic,
         useLlm: true, 
         llmLogic, 
+        outflowLogic: () => {
+            return
+        },
     });
     await instance.incoming(customFilter);
 });
