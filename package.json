@@ -5,8 +5,8 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsc",
-    "test": "tsx ./test/index.spec.ts"
+    "dev": "tsc NODE_ENV=dev",
+    "test": "tsx ./test/index.spec.ts NODE_ENV=dev"
   },
   "author": "",
   "license": "ISC",

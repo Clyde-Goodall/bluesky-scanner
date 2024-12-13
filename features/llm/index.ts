@@ -1,25 +1,26 @@
-// import OpenAI from "openai";
-// import dotenv from "dotenv";
+import OpenAI from "openai";
+import dotenv from "dotenv";
 
-// dotenv.config();
-// const ENV: string = process.env.ENV;
+dotenv.config();
+const ENV: string = process.env.ENV as string ?? null;
+//  as string
+const client = new OpenAI({
+    apiKey: process.env.OPENAI_SECRET_KEY
+});
 
-// client = new OpenAI(process.env.OPENAI_SECRET_KEY);
-
-// async function getValidScientificName(msg, prompt) {
-//     chat_completion = await client.chat.completions.create(
-//         messages=[
-//             {
-//                 "role": "user",
-//                 "content": `${prompt}   -   ${message}`,
-//             }
-//         ],
-//         model="gpt-4o",
-//     );
-//     output = chat_completion.choices[0].message.content
-//     if(ENV == "DEV") {
-//         console.log(`chat completion: ${chat_completion.choices}`);
-//     }
-//     if(output == false) return false;
-//     return output
-// }
+export async function getChatCompletion(msg: string) {
+    const chat_completion = await client.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+            {
+                "role": "user",
+                "content": msg,
+            }
+        ],
+    });
+    const output = chat_completion!.choices[0]!.message.content
+    // if(ENV == "dev") {
+    //     printer(`chat completion: ${chat_completion.choices}`, "body");
+    // }
+    return output;
+}
