@@ -1,7 +1,7 @@
 import WebSocket from "ws";
 import { insertNewFind } from "./features/mongo/index.ts";
 import type { JetstreamEvent } from "./types/index.ts";
-import {getChatCompletion} from './features/llm/index.ts';
+import {_getChatCompletion} from './features/llm/index.ts';
 import {printer} from './features/index.ts';
 import dotenv from "dotenv";
 dotenv.config();
@@ -44,68 +44,71 @@ export default class BlueskyScanner {
     private connect() {
         printer("Hunting down cool posts...", "heading");
         this.client.onmessage = (event) => {
-            const eventString = JSON.parse(event.data.toString()); 
+            const eventDataJSON = JSON.parse(event.data.toString()); 
             this.handlers.forEach(({ callback }) => {
-                this.incomingMessageHandler(eventString, callback);
+                const filtered = this.incomingMessageHandler(eventDataJSON);
+                if(!filtered) return;
+                if(ENV === "dev") {
+                    printer("Skeet found", "heading");
+                    printer(this.eventMessageText(eventDataJSON) as string, "body");
+                }
+                callback(eventDataJSON);
             });
         };
     }
-
-    // handles event data through user-provided logic
-    private async incomingMessageHandler(obj: JetstreamEvent, callback: Function) {
+    // returns boolean for passing/failing filter
+    private incomingMessageHandler(obj: JetstreamEvent): boolean {
         const text = this.eventMessageText(obj);
         let matches = false;
         if(this.filterFunction === undefined) { // no matches on the filter
             matches = true; // defaults to yes unless a filter has been provided
         } else {
-            try { 
+            try {
                 matches = text ? this.filterFunction(text) : false; // potentially want to specify how many filters it matches
             } catch(e) {
                 console.log(e);
             }
         }
-        if(!matches) return // filter guard
+        return matches;
+    }
 
-        if(ENV === "dev") {
-            printer("Skeet found", "header");
-            printer(text as string, "body");
-        }
+    public async getChatCompletion(text: string, promptModifier: Function): Promise<JSON | null> {
         let llmPrompt = null;
-        if(this.llmLogic !== undefined && this.useLlm) { 
-            try { // takes bluesky text and interpolates it into the prompt provided by the function
-                llmPrompt = this.llmLogic(text as string);
-            } catch(e) {
-                console.log(e);
-            }
+        if(promptModifier === undefined) {
+            return Promise.resolve(null)
         }
-        const llmOutput = this.useLlm && llmPrompt ? await getChatCompletion(llmPrompt as string) : null; // using this to transform incoming message into usable json
+        llmPrompt = promptModifier(text as string);
+        const llmOutput = llmPrompt ? await _getChatCompletion(llmPrompt as string) : null; // using this to transform incoming message into usable json
         let outputAsJson = null;
         try {
-            outputAsJson = this.useLlm ? JSON.parse(llmOutput as string) : null;
-            if(ENV == "dev" && this.useLlm) {
+            outputAsJson = JSON.parse(llmOutput as string);
+            if(ENV == "dev") {
                 printer("Chat completion", "header");
                 printer(`${outputAsJson}`, "body");
             }
+            return outputAsJson;
         } catch(e) {
             console.log(e); // this absolutely should have the option to be logged to a database somewhere tbh
         }
-        let checkIfDoInsert = this.mongoInsertDefault; // again, defaults to true if user wants to log but provides no logic
-        if(this.useMongo && this.mongoLogic !== undefined) {
-            try {
-                checkIfDoInsert = this.mongoLogic(outputAsJson);
-            } catch(e) {
-                console.log(e);
-            }
-        } 
-        if(checkIfDoInsert) {
-            try {
-                await insertNewFind(llmOutput as string);
-                printer("Record Inserted", "header");
+        return Promise.resolve(null);
+    }
 
+    public async insertNewRecord(record: Object, insertLogic?: Function) {
+        let checkIfDoInsert = this.mongoInsertDefault; // again, defaults to true if user wants to log but provides no logic
+        if(insertLogic !== undefined) {
+            try {
+                checkIfDoInsert = insertLogic(record);
             } catch(e) {
                 console.log(e);
             }
         } 
+        if(!checkIfDoInsert) return
+        try {
+            await insertNewFind(record as string);
+            printer("Record Inserted", "header");
+        } catch(e) {
+            console.log(e);
+        }
     }
 
     public on(callback: Function): this {

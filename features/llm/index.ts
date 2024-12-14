@@ -8,7 +8,7 @@ const client = new OpenAI({
     apiKey: process.env.OPENAI_SECRET_KEY
 });
 
-export async function getChatCompletion(msg: string) {
+export async function _getChatCompletion(msg: string) {
     const chat_completion = await client.chat.completions.create({
         model: "gpt-4o",
         messages: [

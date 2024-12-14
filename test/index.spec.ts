@@ -1,6 +1,5 @@
 import { test } from "node:test";
 import BlueskyScanner from "../index.js";
-import { getChatCompletion } from "../features/llm/index.ts";
 
 const phrases = [
     "new crypto project",
@@ -13,6 +12,7 @@ const phrases = [
     "lowcap",
     "cryptorevolution",
     "cryptogem",
+    "ass"
 ];
 
 test("Message content filtering function", async (t) => {
@@ -51,8 +51,12 @@ test("Message content filtering function", async (t) => {
         useLlm: true, 
         llmLogic,
     });
-    instance.on((res: any) => {
-        console.log(res);
+    instance.on(async (res: any) => {
+        // console.log(res);
+        const llmOutput = await instance.getChatCompletion(res, llmLogic)
+        const record = {...res, llmOutput}
+        console.log(res)
+        const insertion = await instance.insertNewRecord(record, mongoLogic)
     });
 });
 
