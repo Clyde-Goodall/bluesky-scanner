@@ -45,15 +45,15 @@ test("Message content filtering function", async (t) => {
     }
     // Create instance and run with the custom filter
     const instance = new BlueskyScanner({
+        filterFunction: customFilter,
         useMongo: true, 
         mongoLogic,
         useLlm: true, 
-        llmLogic, 
-        outflowLogic: () => {
-            return
-        },
+        llmLogic,
     });
-    await instance.incoming(customFilter);
+    instance.on((res: any) => {
+        console.log(res);
+    });
 });
 
 // test("Tests llm chat completion output", async (t) => {
