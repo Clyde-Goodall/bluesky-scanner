@@ -1,6 +1,5 @@
 import { test } from "node:test";
 import BlueskyScanner from "../index.js";
-import { getChatCompletion } from "../features/llm/index.ts";
 
 const phrases = [
     "new crypto project",
@@ -13,6 +12,7 @@ const phrases = [
     "lowcap",
     "cryptorevolution",
     "cryptogem",
+    "god"
 ];
 
 test("Message content filtering function", async (t) => {
@@ -45,15 +45,26 @@ test("Message content filtering function", async (t) => {
     }
     // Create instance and run with the custom filter
     const instance = new BlueskyScanner({
-        useMongo: true, 
+        filterFunction: customFilter,
+        useMongo: false, 
         mongoLogic,
-        useLlm: true, 
-        llmLogic, 
-        outflowLogic: () => {
-            return
-        },
+        useLlm: false, 
+        llmLogic,
     });
-    await instance.incoming(customFilter);
+    instance.on(async (res: any) => {
+        // console.log(res);
+        const llmOutput = await instance.getChatCompletion(res, llmLogic)
+        const record = {...res.commit.record}
+        console.log(record);
+        const insertion = await instance.insertNewRecord(record, mongoLogic)
+        const response = await fetch('http://localhost:4000/trigger', {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+            body: JSON.stringify(record),
+        });
+    });
 });
 
 // test("Tests llm chat completion output", async (t) => {

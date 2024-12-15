@@ -1,4 +1,4 @@
-import {MongoClient, ServerApiVersion} from 'mongodb';
+import {MongoClient, ServerApiVersion, type Document} from 'mongodb';
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -15,6 +15,7 @@ export async function insertNewFind(msg: string) {
         const db = client.db(process.env.DATABASE as string);
         const collection = db.collection(process.env.COLLECTION as string);
         //@ts-ignore
+        if(process.env.ENV === "dev") return;
         await collection.insertOne(msg);
     } catch(e) {
         console.log(e);
