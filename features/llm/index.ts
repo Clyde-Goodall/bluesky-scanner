@@ -19,8 +19,5 @@ export async function _getChatCompletion(msg: string) {
         ],
     });
     const output = chat_completion!.choices[0]!.message.content
-    // if(ENV == "dev") {
-    //     printer(`chat completion: ${chat_completion.choices}`, "body");
-    // }
     return output;
 }

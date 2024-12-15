@@ -20,6 +20,7 @@ export default class BlueskyScanner {
     llmLogic?: Function
     mongoLogic?: Function
     mongoInsertDefault: boolean
+    sendIfNoLlm?: boolean
     filterFunction?: Function
         constructor({
         useMongo=false, 
@@ -28,6 +29,7 @@ export default class BlueskyScanner {
         filterFunction, llmLogic, mongoLogic,
         source="wss://jetstream2.us-west.bsky.network/subscribe",
         mongoInsertDefault=true,
+        sendIfNoLlm=true
     }) { // this whole config could be organized better tbh, should just go all-inon stratifying by utility
         this.handlers = []; 
         this.useMongo = useMongo;
@@ -49,7 +51,7 @@ export default class BlueskyScanner {
                 const filtered = this.incomingMessageHandler(eventDataJSON);
                 if(!filtered) return;
                 if(ENV === "dev") {
-                    printer("Skeet found", "heading");
+                    printer("Fuck", "heading");
                     printer(this.eventMessageText(eventDataJSON) as string, "body");
                 }
                 callback(eventDataJSON);

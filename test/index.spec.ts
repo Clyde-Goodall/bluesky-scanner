@@ -12,7 +12,7 @@ const phrases = [
     "lowcap",
     "cryptorevolution",
     "cryptogem",
-    "ass"
+    "god"
 ];
 
 test("Message content filtering function", async (t) => {
@@ -46,17 +46,24 @@ test("Message content filtering function", async (t) => {
     // Create instance and run with the custom filter
     const instance = new BlueskyScanner({
         filterFunction: customFilter,
-        useMongo: true, 
+        useMongo: false, 
         mongoLogic,
-        useLlm: true, 
+        useLlm: false, 
         llmLogic,
     });
     instance.on(async (res: any) => {
         // console.log(res);
         const llmOutput = await instance.getChatCompletion(res, llmLogic)
-        const record = {...res, llmOutput}
-        console.log(res)
+        const record = {...res.commit.record}
+        console.log(record);
         const insertion = await instance.insertNewRecord(record, mongoLogic)
+        const response = await fetch('http://localhost:4000/trigger', {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+            body: JSON.stringify(record),
+        });
     });
 });
 
